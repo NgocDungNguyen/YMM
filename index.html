@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finder Custom Filter & Search - Analytics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Inter, sans-serif; }
+    .scrollbar::-webkit-scrollbar { width: 8px; }
+    .scrollbar::-webkit-scrollbar-thumb { background: #cfcfd4; border-radius: 8px; }
+    .dragging { opacity: 0.5; background: #f6f6f7; }
+  </style>
+</head>
+<body class="bg-[#f6f6f7] text-[#303030]">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-[260px] bg-[#f2f2f3] border-r border-[#e2e2e5] flex flex-col">
+      <div class="p-3 text-xs text-[#5c5f62] font-medium">Menu</div>
+      <nav class="px-2 text-[13px] space-y-1">
+        <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#e9e9eb] cursor-pointer" onclick="showProductsView()"><i class="fas fa-tag text-[#5c5f62]"></i> Products</div>
+        <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#e9e9eb] cursor-pointer" onclick="hideProductsView()"><i class="fas fa-chart-line text-[#5c5f62]"></i> Year Make Model</div>
+        <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#e9e9eb] cursor-pointer"><i class="fas fa-store text-[#5c5f62]"></i> Online Store</div>
+      </nav>
+      <div class="mt-auto px-2 py-3 text-[13px] text-[#5c5f62]">
+        <div class="flex items-center gap-2 px-2 py-1.5"><i class="fas fa-cog"></i> Settings</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto scrollbar">
+      <header class="h-12 border-b border-[#ededf0] bg-white flex items-center justify-between px-5 text-[14px]">
+        <div class="flex items-center gap-2 font-medium">
+          <span class="w-5 h-5 bg-[#b60000] rounded flex items-center justify-center text-white text-[11px]">F</span>
+          Finder Custom Filter &amp; Search
+        </div>
+        <div class="text-[#8c9196]">•••</div>
+      </header>
+
+      <!-- Main Content Container -->
+      <div id="mainContainer" class="max-w-[1000px] mx-auto px-6 py-6">
+        <div id="dashboardView">
+          <div class="flex items-center gap-2 mb-3">
+            <h1 class="text-[20px] font-semibold">Year Make Model</h1>
+            <div class="group relative flex items-center">
+              <i class="fas fa-info-circle text-[#8c9196] cursor-help text-sm"></i>
+              <span class="absolute left-full ml-2 hidden group-hover:block bg-[#303030] text-white text-[12px] px-2 py-1 rounded whitespace-nowrap z-50">Learn more</span>
+            </div>
+          </div>
+
+          <!-- Notification Box -->
+          <div class="mb-4 bg-[#e7f1fb] border border-[#b1d1ee] rounded-lg overflow-hidden transition-all duration-300" id="notificationBox">
+            <button onclick="toggleNotification()" class="w-full flex items-center justify-between p-3 text-[13px] font-medium text-[#084e8a] hover:bg-[#d9e9f9] transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-info-circle"></i>
+                <span>Important: How to set up your Year Make Model search</span>
+              </div>
+              <i class="fas fa-chevron-down transition-transform duration-300" id="notiChevron"></i>
+            </button>
+            <div id="notiContent" class="hidden px-10 pb-4 text-[13px] text-[#084e8a] space-y-2">
+              <p>1. Ensure your products have the corresponding metafields assigned.</p>
+              <p>2. Add the YMM options in the list below to match your product attributes.</p>
+              <p>3. Use the preview on the right to see how it will appear to your customers.</p>
+            </div>
+          </div>
+
+          <!-- Enable Switch Row -->
+          <div class="bg-white border border-[#e2e2e5] rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
+            <div class="flex flex-col">
+              <div class="flex items-center gap-1.5">
+                <span class="font-medium text-[14px]">Enable Year Make Model</span>
+                <div class="group relative flex items-center">
+                  <i class="fas fa-question-circle text-[#8c9196] cursor-help text-[12px]"></i>
+                  <span class="absolute bottom-full mb-2 hidden group-hover:block bg-[#303030] text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-30">Activate the search widget on your store</span>
+                </div>
+              </div>
+              <p class="text-[12px] text-[#6d7175]">Turn on to display the search widget based on your configuration.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="enableToggle" class="sr-only peer" onchange="handleToggleChange()">
+              <div class="w-10 h-5 bg-[#e2e2e5] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#008060]"></div>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-12 gap-4">
+            <!-- Left Box: YMM Option -->
+            <div class="col-span-8 flex flex-col">
+              <div class="bg-white border border-[#e2e2e5] rounded-lg shadow-sm flex flex-col max-h-[500px]">
+                <div class="p-4 border-b border-[#f1f1f1] flex items-center justify-between">
+                  <div class="flex flex-col">
+                    <div class="flex items-center gap-1.5">
+                      <h2 class="font-semibold text-[14px]">Year Make Model Option</h2>
+                      <div class="group relative flex items-center">
+                        <i class="fas fa-question-circle text-[#8c9196] cursor-help text-[12px]"></i>
+                        <span class="absolute bottom-full mb-2 hidden group-hover:block bg-[#303030] text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-30">Configure searchable attributes</span>
+                      </div>
+                    </div>
+                    <p class="text-[11px] text-[#6d7175]">Define the hierarchy of your search fields.</p>
+                  </div>
+                  <button id="topAddBtn" onclick="showAddView()" class="bg-white border border-[#d1d1d1] text-[12px] font-medium px-3 py-1.5 rounded hover:bg-[#f6f6f7] transition-colors">
+                    + Add YMM Option
+                  </button>
+                </div>
+                
+                <div class="overflow-y-auto scrollbar flex-1">
+                  <table class="w-full text-left text-[13px] border-separate border-spacing-0">
+                    <thead class="bg-[#f9f9f9] sticky top-0 z-10">
+                      <tr>
+                        <th class="px-4 py-3 font-medium text-[#5c5f62] border-b border-[#e2e2e5] w-10"></th>
+                        <th class="px-2 py-3 font-medium text-[#5c5f62] border-b border-[#e2e2e5]">Label</th>
+                        <th class="px-4 py-3 font-medium text-[#5c5f62] border-b border-[#e2e2e5]">Attribute</th>
+                        <th class="px-4 py-3 font-medium text-[#5c5f62] border-b border-[#e2e2e5] text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ymmTableBody" class="divide-y divide-[#f1f1f1]">
+                      <!-- Rows generated by JS -->
+                    </tbody>
+                  </table>
+                </div>
+                <div id="bottomAddBtn" class="p-3 border-t border-[#f1f1f1] bg-white rounded-b-lg">
+                  <button onclick="showAddView()" class="flex items-center gap-2 text-[13px] font-medium text-[#5c5f62] hover:text-[#303030] px-2 py-1 transition-colors">
+                    <i class="fas fa-plus-circle text-[#8c9196]"></i> Add YMM Option
+                  </button>
+                </div>
+              </div>
+
+              <!-- Apply to Page Box -->
+              <div class="mt-4 bg-white border border-[#e2e2e5] rounded-lg shadow-sm p-4">
+                <div class="flex flex-col mb-1">
+                  <div class="flex items-center gap-1.5">
+                    <h2 class="font-semibold text-[14px]">Apply to Page</h2>
+                    <div class="group relative flex items-center">
+                      <i class="fas fa-question-circle text-[#8c9196] cursor-help text-[12px]"></i>
+                      <span class="absolute bottom-full mb-2 hidden group-hover:block bg-[#303030] text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-30">Select where the widget appears</span>
+                    </div>
+                  </div>
+                  <p class="text-[12px] text-[#6d7175]">Choose the specific pages or collections to display this YMM filter.</p>
+                </div>
+                <p class="text-[12px] text-[#6d7175] mb-3">Choose page to apply YMM</p>
+                <div class="relative">
+                  <div id="pageSelectorTrigger" class="min-h-[36px] w-full bg-[#f6f6f7] border border-[#d1d1d1] rounded px-2 py-1 flex flex-wrap gap-1.5 cursor-pointer items-center transition-all hover:border-[#babec3]">
+                    <span id="placeholderText" class="text-[13px] text-[#8c9196] ml-1">Search or select pages...</span>
+                    <div id="selectedTags" class="flex flex-wrap gap-1.5"></div>
+                  </div>
+                  
+                  <!-- Dropdown -->
+                  <div id="pageDropdown" class="hidden absolute z-20 w-full mt-1 bg-white border border-[#e2e2e5] rounded shadow-lg max-h-[300px] flex flex-col">
+                    <div class="p-2 border-b border-[#f1f1f1]">
+                      <div class="relative">
+                        <i class="fas fa-search absolute left-2 top-2.5 text-[#babec3] text-xs"></i>
+                        <input type="text" id="pageSearch" placeholder="Search pages or collections..." class="w-full pl-7 pr-3 py-1.5 text-[13px] bg-[#f6f6f7] border-none rounded focus:ring-1 focus:ring-[#2c6ecb] outline-none">
+                      </div>
+                    </div>
+                    <div class="overflow-y-auto scrollbar flex-1 p-1 space-y-0.5" id="pageOptionsList"></div>
+                    <div class="p-2 border-t border-[#f1f1f1] flex justify-end">
+                      <button onclick="togglePageDropdown(); showToast('Settings saved successfully');" class="bg-[#008060] text-white text-[12px] font-medium px-3 py-1.5 rounded hover:bg-[#006e52]">Save</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Box: Preview -->
+            <div class="col-span-4 flex flex-col">
+              <div class="bg-white border border-[#e2e2e5] rounded-lg shadow-sm flex flex-col h-[600px]">
+                <div class="p-4 border-b border-[#f1f1f1]">
+                  <h2 class="font-semibold text-[14px]">Preview YMM</h2>
+                </div>
+                <div class="flex-1 overflow-y-auto scrollbar p-4" id="previewContainer">
+                  <div id="previewDisabled" class="border-2 border-dashed border-[#e2e2e5] rounded-lg h-full flex flex-col items-center justify-center text-center p-6 bg-[#fbfbfb]">
+                    <div class="w-12 h-12 bg-[#f1f1f1] rounded-full flex items-center justify-center mb-3">
+                      <i class="fas fa-eye text-[#8c9196]"></i>
+                    </div>
+                    <p class="text-[13px] font-medium text-[#303030]">Widget Preview</p>
+                    <p class="text-[12px] text-[#6d7175] mt-1">Enable Year Make Model to see how the widget will look on your storefront.</p>
+                  </div>
+                  <div id="previewEnabled" class="hidden space-y-4"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products View -->
+        <div id="productsView" class="hidden">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <button onclick="hideProductsView()" class="text-[#5c5f62] hover:text-[#303030]"><i class="fas fa-arrow-left"></i></button>
+              <h1 class="text-[20px] font-semibold">Products</h1>
+            </div>
+            <button onclick="addNewProduct()" class="bg-[#008060] text-white text-[13px] font-medium px-4 py-2 rounded hover:bg-[#006e52]">Add New Product</button>
+          </div>
+          <div class="bg-white border border-[#e2e2e5] rounded-lg shadow-sm overflow-x-auto scrollbar">
+            <table class="w-full text-left text-[12px]">
+              <thead class="bg-[#f9f9f9] border-b border-[#e2e2e5]">
+                <tr>
+                  <th class="px-3 py-2 font-medium w-32">Title</th>
+                  <th class="px-3 py-2 font-medium">Availability</th>
+                  <th class="px-3 py-2 font-medium">Category</th>
+                  <th class="px-3 py-2 font-medium">Vendor</th>
+                  <th class="px-3 py-2 font-medium">Type</th>
+                  <th class="px-3 py-2 font-medium">Metafields</th>
+                  <th class="px-3 py-2 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody" class="divide-y divide-[#f1f1f1]"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Add YMM Option Subtab View -->
+        <div id="addView" class="hidden">
+          <div class="flex items-center gap-3 mb-6">
+            <button onclick="hideAddView()" class="text-[#5c5f62] hover:text-[#303030]"><i class="fas fa-arrow-left"></i></button>
+            <div>
+              <h1 id="addViewTitle" class="text-[20px] font-semibold">Add Year Make Model Option</h1>
+              <p class="text-[12px] text-[#6d7175] mt-1">Create a new field by mapping a source and controlling the values shown in the widget.</p>
+            </div>
+          </div>
+
+          <div class="max-w-[760px] space-y-4">
+            <div class="bg-white border border-[#e2e2e5] rounded-lg shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-[#f1f1f1] bg-[#f9f9f9]">
+                <h2 class="font-semibold text-[14px]">Field Configuration</h2>
+              </div>
+              <div class="p-5 space-y-5">
+                <div>
+                  <label class="block text-[13px] font-medium text-[#303030] mb-1.5">Source</label>
+                  <select id="sourceSelect" onchange="handleSourceChange()" class="w-full bg-[#f6f6f7] border border-[#d1d1d1] rounded px-3 py-2 text-[13px] focus:ring-1 focus:ring-[#2c6ecb] outline-none">
+                    <option value="" disabled selected>Select a source</option>
+                    <optgroup label="Standard">
+                      <option value="available">Available</option>
+                      <option value="collection">Collection</option>
+                      <option value="product_category">Product Category</option>
+                      <option value="tag">Tag</option>
+                      <option value="vendor">Vendor</option>
+                      <option value="product_type">Product Type</option>
+                    </optgroup>
+                    <optgroup label="Product Variant">
+                      <option value="color">Color</option>
+                      <option value="size">Size</option>
+                      <option value="title">Title</option>
+                    </optgroup>
+                    <optgroup label="Metafield">
+                      <option value="product.metafields.custom.vehicles_year">vehicles_year</option>
+                      <option value="product.metafields.custom.vehicles_make">vehicles_make</option>
+                      <option value="product.metafields.custom.vehicles_model">vehicles_model</option>
+                      <option value="product.metafields.custom.vehicles_submodel">vehicles_submodel</option>
+                      <option value="product.metafields.custom.vehicles_engine">vehicles_engine</option>
+                      <option value="product.metafields.custom.vehicles_trim">vehicles_trim</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div id="sourceDetails" class="hidden grid grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <label class="block text-[13px] font-medium text-[#303030] mb-1.5">Label</label>
+                    <input type="text" id="labelInput" class="w-full border border-[#d1d1d1] rounded px-3 py-2 text-[13px] focus:ring-1 focus:ring-[#2c6ecb] outline-none" placeholder="e.g. Production Year">
+                  </div>
+                  <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="block text-[13px] font-medium text-[#303030]">Values</label>
+                      <div class="flex items-center gap-2 text-[12px] text-[#6d7175]">
+                        <span>Sort</span>
+                        <select id="valueSortSelect" onchange="handleValueSortChange()" class="border border-[#d1d1d1] rounded px-2 py-1 bg-white text-[12px]">
+                          <option value="az">A-Z</option>
+                          <option value="smallLarge">Small-Large</option>
+                        </select>
+                      </div>
+                    </div>
+                    <select id="valueTypeSelect" onchange="handleValueTypeChange()" class="w-full border border-[#d1d1d1] rounded px-3 py-2 text-[13px] focus:ring-1 focus:ring-[#2c6ecb] outline-none">
+                      <option value="all">Use all values</option>
+                      <option value="manual">Manually Selection</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="manualSelectionBox" class="hidden bg-white border border-[#e2e2e5] rounded-lg shadow-sm overflow-hidden">
+              <div class="p-4 border-b border-[#f1f1f1] bg-[#f9f9f9] flex items-center justify-between">
+                <div>
+                  <h3 class="font-medium text-[13px]">Select Values</h3>
+                  <p class="text-[12px] text-[#6d7175]">Choose which source values should appear in the widget.</p>
+                </div>
+                <span class="text-[12px] text-[#8c9196]">Drag to reorder</span>
+              </div>
+              <div class="max-h-[300px] overflow-y-auto scrollbar p-2" id="valuesListContainer"></div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button onclick="hideAddView()" class="px-4 py-2 border border-[#d1d1d1] rounded text-[13px] font-medium hover:bg-[#f6f6f7]">Cancel</button>
+              <button onclick="saveNewOption()" class="px-4 py-2 bg-[#008060] text-white rounded text-[13px] font-medium hover:bg-[#006e52]">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <button class="fixed bottom-5 right-5 w-11 h-11 rounded-full bg-[#b60000] text-white flex items-center justify-center shadow-lg z-50">
+    <span class="text-[12px] font-bold">F</span>
+  </button>
+
+  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2"></div>
+
+  <script>
+    let mockProducts = [
+      { id: 1, title: "Front Brake Pads", available: "In Stock", collection: "Braking", product_category: "Parts", tags: ["Bestseller", "Ceramic"], vendor: "Bosch", product_type: "Brakes", color: "Black", size: "Standard", metafields: { vehicles_year: ["2020"], vehicles_make: ["Ford"], vehicles_model: ["F-150"], vehicles_submodel: ["XL"], vehicles_engine: ["3.3L V6"], vehicles_trim: ["Base"] } },
+      { id: 2, title: "Oil Filter", available: "In Stock", collection: "Maintenance", product_category: "Engine", tags: ["Synthetic"], vendor: "Mobil1", product_type: "Engine", color: "Blue", size: "Small", metafields: { vehicles_year: ["2020"], vehicles_make: ["Ford"], vehicles_model: ["Mustang"], vehicles_submodel: ["GT"], vehicles_engine: ["5.0L V8"], vehicles_trim: ["Premium"] } },
+      { id: 3, title: "Air Filter", available: "In Stock", collection: "Maintenance", product_category: "Engine", tags: ["High Flow"], vendor: "K&N", product_type: "Engine", color: "Red", size: "Large", metafields: { vehicles_year: ["2021"], vehicles_make: ["Ford"], vehicles_model: ["F-150"], vehicles_submodel: ["Lariat"], vehicles_engine: ["3.5L EcoBoost"], vehicles_trim: ["Luxury"] } },
+      { id: 4, title: "All-Weather Mats", available: "In Stock", collection: "Interior", product_category: "Accessories", tags: ["Rubber"], vendor: "WeatherTech", product_type: "Interior", color: "Grey", size: "Custom", metafields: { vehicles_year: ["2021"], vehicles_make: ["Toyota"], vehicles_model: ["Camry"], vehicles_submodel: ["SE"], vehicles_engine: ["2.5L I4"], vehicles_trim: ["Sport"] } },
+      { id: 5, title: "Headlight Bulb", available: "Out of Stock", collection: "Lighting", product_category: "Electrical", tags: ["LED"], vendor: "Philips", product_type: "Lighting", color: "White", size: "H11", metafields: { vehicles_year: ["2021"], vehicles_make: ["Toyota"], vehicles_model: ["Corolla"], vehicles_submodel: ["LE"], vehicles_engine: ["1.8L I4"], vehicles_trim: ["Standard"] } },
+      { id: 6, title: "Spark Plugs", available: "In Stock", collection: "Maintenance", product_category: "Engine", tags: ["Iridium"], vendor: "NGK", product_type: "Engine", color: "Silver", size: "Threaded", metafields: { vehicles_year: ["2022"], vehicles_make: ["Toyota"], vehicles_model: ["Camry"], vehicles_submodel: ["XSE"], vehicles_engine: ["3.5L V6"], vehicles_trim: ["Premium Sport"] } },
+      { id: 7, title: "Brake Rotor", available: "In Stock", collection: "Braking", product_category: "Parts", tags: ["Drilled"], vendor: "Brembo", product_type: "Brakes", color: "Silver", size: "12.6 inch", metafields: { vehicles_year: ["2022"], vehicles_make: ["Honda"], vehicles_model: ["Civic"], vehicles_submodel: ["Sport"], vehicles_engine: ["2.0L I4"], vehicles_trim: ["Sport"] } },
+      { id: 8, title: "Cabin Filter", available: "In Stock", collection: "Maintenance", product_category: "Interior", tags: ["Carbon"], vendor: "Fram", product_type: "Interior", color: "White", size: "Standard", metafields: { vehicles_year: ["2023"], vehicles_make: ["Tesla"], vehicles_model: ["Model 3"], vehicles_submodel: ["Long Range"], vehicles_engine: ["Electric"], vehicles_trim: ["AWD"] } },
+      { id: 9, title: "Wiper Blades", available: "In Stock", collection: "Maintenance", product_category: "Exterior", tags: ["Silicone"], vendor: "Rain-X", product_type: "Exterior", color: "Black", size: "26 inch", metafields: { vehicles_year: ["2024"], vehicles_make: ["Tesla"], vehicles_model: ["Model Y"], vehicles_submodel: ["Performance"], vehicles_engine: ["Electric"], vehicles_trim: ["Performance"] } },
+      { id: 10, title: "Wheel Spacers", available: "In Stock", collection: "Exterior", product_category: "Parts", tags: ["Aluminum"], vendor: "H&R", product_type: "Suspension", color: "Black", size: "20mm", metafields: { vehicles_year: ["2024"], vehicles_make: ["BMW"], vehicles_model: ["X5"], vehicles_submodel: ["xDrive40i"], vehicles_engine: ["3.0L I6"], vehicles_trim: ["M Sport"] } },
+      { id: 11, title: "Roof Rack", available: "In Stock", collection: "Exterior", product_category: "Accessories", tags: ["Aero"], vendor: "Thule", product_type: "Exterior", color: "Silver", size: "Large", metafields: { vehicles_year: ["2024"], vehicles_make: ["BMW"], vehicles_model: ["i7"], vehicles_submodel: ["xDrive60"], vehicles_engine: ["Electric"], vehicles_trim: ["Luxury"] } },
+      { id: 12, title: "Tail Light", available: "In Stock", collection: "Lighting", product_category: "Electrical", tags: ["Smoked"], vendor: "Spyder", product_type: "Lighting", color: "Smoked", size: "OEM Fit", metafields: { vehicles_year: ["2023"], vehicles_make: ["Ford"], vehicles_model: ["Explorer"], vehicles_submodel: ["ST"], vehicles_engine: ["3.0L EcoBoost"], vehicles_trim: ["Performance"] } },
+      { id: 13, title: "Exhaust Tip", available: "In Stock", collection: "Exhaust", product_category: "Parts", tags: ["Chrome"], vendor: "Borla", product_type: "Exhaust", color: "Chrome", size: "4 inch", metafields: { vehicles_year: ["2022"], vehicles_make: ["Ford"], vehicles_model: ["F-150"], vehicles_submodel: ["Raptor"], vehicles_engine: ["3.5L High Output"], vehicles_trim: ["Raptor"] } },
+      { id: 14, title: "Radiator Hose", available: "In Stock", collection: "Cooling", product_category: "Parts", tags: ["Silicone"], vendor: "Mishimoto", product_type: "Engine", color: "Blue", size: "Universal", metafields: { vehicles_year: ["2021"], vehicles_make: ["Honda"], vehicles_model: ["CR-V"], vehicles_submodel: ["EX-L"], vehicles_engine: ["1.5L I4"], vehicles_trim: ["Standard"] } },
+      { id: 15, title: "Mud Flaps", available: "In Stock", collection: "Exterior", product_category: "Accessories", tags: ["Heavy Duty"], vendor: "Husky", product_type: "Exterior", color: "Black", size: "Set of 4", metafields: { vehicles_year: ["2020"], vehicles_make: ["Toyota"], vehicles_model: ["RAV4"], vehicles_submodel: ["Adventure"], vehicles_engine: ["2.5L I4"], vehicles_trim: ["Off-Road"] } },
+      { id: 16, title: "Tow Hitch", available: "In Stock", collection: "Exterior", product_category: "Accessories", tags: ["Class III"], vendor: "Curt", product_type: "Exterior", color: "Black", size: "2 inch", metafields: { vehicles_year: ["2023"], vehicles_make: ["Ford"], vehicles_model: ["F-150"], vehicles_submodel: ["Tremor"], vehicles_engine: ["5.0L V8"], vehicles_trim: ["Off-Road"] } },
+      { id: 17, title: "License Plate Frame", available: "In Stock", collection: "Exterior", product_category: "Accessories", tags: ["Carbon Fiber"], vendor: "Generic", product_type: "Exterior", color: "Black", size: "US Standard", metafields: { vehicles_year: ["2022"], vehicles_make: ["Honda"], vehicles_model: ["Accord"], vehicles_submodel: ["Touring"], vehicles_engine: ["2.0L I4"], vehicles_trim: ["Luxury"] } },
+      { id: 18, title: "Windshield Cover", available: "In Stock", collection: "Interior", product_category: "Accessories", tags: ["Reflective"], vendor: "SunShade", product_type: "Interior", color: "Silver", size: "Large", metafields: { vehicles_year: ["2023"], vehicles_make: ["Tesla"], vehicles_model: ["Model X"], vehicles_submodel: ["Plaid"], vehicles_engine: ["Electric"], vehicles_trim: ["Performance"] } }
+    ];
+
+    function getSourceValue(product, source) {
+      if (source.startsWith('product.metafields.custom.')) {
+        const key = source.replace('product.metafields.custom.', '');
+        return product.metafields[key] || [];
+      }
+      const val = product[source];
+      return Array.isArray(val) ? val : (val ? [val] : []);
+    }
+
+    function getAllUniqueValues(source) {
+      const allVals = new Set();
+      mockProducts.forEach(p => {
+        getSourceValue(p, source).forEach(v => allVals.add(v));
+      });
+      return Array.from(allVals).sort();
+    }
+
+    let configuredOptions = [
+      { id: 1, label: 'Year', source: 'product.metafields.custom.vehicles_year', type: 'all', values: [] },
+      { id: 2, label: 'Make', source: 'product.metafields.custom.vehicles_make', type: 'all', values: [] },
+      { id: 3, label: 'Model', source: 'product.metafields.custom.vehicles_model', type: 'all', values: [] }
+    ];
+
+    let editingOptionId = null;
+
+    // --- Core Functions ---
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-[#303030]' : 'bg-[#d72c0d]';
+      toast.className = `${bgColor} text-white text-[13px] px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 transition-all duration-300 transform translate-y-0 opacity-100`;
+      toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function toggleNotification() {
+      const content = document.getElementById('notiContent');
+      const chevron = document.getElementById('notiChevron');
+      content.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    }
+
+    function handleToggleChange() {
+      const isEnabled = document.getElementById('enableToggle').checked;
+      showToast(isEnabled ? "Year Make Model widget enabled" : "Year Make Model widget disabled");
+      updatePreview(true);
+    }
+
+    function showAddView(id = null) {
+      editingOptionId = id;
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('addView').classList.remove('hidden');
+      
+      const title = document.getElementById('addViewTitle');
+      const saveBtn = document.querySelector('#addView button[onclick="saveNewOption()"]');
+
+      if (id) {
+        title.innerText = "Edit Year Make Model Option";
+        saveBtn.innerText = "Update";
+        const opt = configuredOptions.find(o => o.id === id);
+        document.getElementById('sourceSelect').value = opt.source;
+        handleSourceChange();
+        document.getElementById('labelInput').value = opt.label;
+        document.getElementById('valueTypeSelect').value = opt.type;
+        handleValueTypeChange();
+      } else {
+        title.innerText = "Add Year Make Model Option";
+        saveBtn.innerText = "Save";
+        resetAddForm();
+      }
+    }
+
+    function showProductsView() {
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('productsView').classList.remove('hidden');
+      renderProductsTable();
+    }
+
+    function hideProductsView() {
+      document.getElementById('productsView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+    }
+
+    function renderProductsTable() {
+      const body = document.getElementById('productsTableBody');
+      body.innerHTML = '';
+      mockProducts.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-3 py-2"><input type="text" class="w-full border-none focus:ring-1 focus:ring-blue-500 rounded px-1" value="${p.title}" onchange="updateProductField(${p.id}, 'title', this.value)"></td>
+          <td class="px-3 py-2">
+            <select class="w-full border-none focus:ring-1 focus:ring-blue-500 rounded" onchange="updateProductField(${p.id}, 'available', this.value)">
+              <option ${p.available==='In Stock'?'selected':''}>In Stock</option>
+              <option ${p.available==='Out of Stock'?'selected':''}>Out of Stock</option>
+            </select>
+          </td>
+          <td class="px-3 py-2"><input type="text" class="w-full border-none focus:ring-1 focus:ring-blue-500 rounded px-1" value="${p.product_category}" onchange="updateProductField(${p.id}, 'product_category', this.value)"></td>
+          <td class="px-3 py-2"><input type="text" class="w-full border-none focus:ring-1 focus:ring-blue-500 rounded px-1" value="${p.vendor}" onchange="updateProductField(${p.id}, 'vendor', this.value)"></td>
+          <td class="px-3 py-2"><input type="text" class="w-full border-none focus:ring-1 focus:ring-blue-500 rounded px-1" value="${p.product_type}" onchange="updateProductField(${p.id}, 'product_type', this.value)"></td>
+          <td class="px-3 py-2">
+            <div class="grid grid-cols-2 gap-1">
+              <input type="text" class="border border-gray-100 rounded px-1 text-[10px]" value="${p.metafields.vehicles_year.join(',')}" onchange="updateProductMeta(${p.id}, 'vehicles_year', this.value)" placeholder="Year">
+              <input type="text" class="border border-gray-100 rounded px-1 text-[10px]" value="${p.metafields.vehicles_make.join(',')}" onchange="updateProductMeta(${p.id}, 'vehicles_make', this.value)" placeholder="Make">
+              <input type="text" class="border border-gray-100 rounded px-1 text-[10px]" value="${p.metafields.vehicles_model.join(',')}" onchange="updateProductMeta(${p.id}, 'vehicles_model', this.value)" placeholder="Model">
+              <input type="text" class="border border-gray-100 rounded px-1 text-[10px]" value="${p.metafields.vehicles_submodel?.join(',') || ''}" onchange="updateProductMeta(${p.id}, 'vehicles_submodel', this.value)" placeholder="Submodel">
+              <input type="text" class="border border-gray-100 rounded px-1 text-[10px]" value="${p.metafields.vehicles_engine?.join(',') || ''}" onchange="updateProductMeta(${p.id}, 'vehicles_engine', this.value)" placeholder="Engine">
+              <input type="text" class="border border-gray-100 rounded px-1 text-[10px]" value="${p.metafields.vehicles_trim?.join(',') || ''}" onchange="updateProductMeta(${p.id}, 'vehicles_trim', this.value)" placeholder="Trim">
+            </div>
+          </td>
+          <td class="px-3 py-2 text-right">
+            <button onclick="deleteProduct(${p.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+          </td>
+        `;
+        body.appendChild(row);
+      });
+    }
+
+    function updateProductField(id, field, value) {
+      const p = mockProducts.find(x => x.id === id);
+      if (p) {
+        p[field] = value;
+        updatePreview(true);
+      }
+    }
+
+    function updateProductMeta(id, key, value) {
+      const p = mockProducts.find(x => x.id === id);
+      if (p) {
+        p.metafields[key] = value.split(',').map(s => s.trim()).filter(Boolean);
+        updatePreview(true);
+      }
+    }
+
+    function deleteProduct(id) {
+      mockProducts = mockProducts.filter(p => p.id !== id);
+      renderProductsTable();
+      updatePreview(true);
+      showToast("Product deleted");
+    }
+
+    function addNewProduct() {
+      const id = Date.now();
+      mockProducts.unshift({
+        id, title: "New Product", available: "In Stock", collection: "General", product_category: "Parts", tags: [], vendor: "Brand", product_type: "Type", color: "Black", size: "M", metafields: { vehicles_year: [], vehicles_make: [], vehicles_model: [], vehicles_submodel: [], vehicles_engine: [], vehicles_trim: [] }
+      });
+      renderProductsTable();
+      showToast("New product added at top");
+    }
+
+    function hideAddView() {
+      document.getElementById('dashboardView').classList.remove('hidden');
+      document.getElementById('addView').classList.add('hidden');
+      editingOptionId = null;
+    }
+
+    function resetAddForm() {
+      document.getElementById('sourceSelect').value = "";
+      document.getElementById('sourceDetails').classList.add('hidden');
+      document.getElementById('manualSelectionBox').classList.add('hidden');
+      document.getElementById('labelInput').value = "";
+      document.getElementById('valueTypeSelect').value = "all";
+    }
+
+    function handleSourceChange() {
+      const source = document.getElementById('sourceSelect').value;
+      if (source) {
+        document.getElementById('sourceDetails').classList.remove('hidden');
+        document.getElementById('labelInput').value = source.split('.').pop().replace(/_/g, ' ');
+        handleValueTypeChange();
+      }
+    }
+
+    function handleValueTypeChange() {
+      const type = document.getElementById('valueTypeSelect').value;
+      const source = document.getElementById('sourceSelect').value;
+      const manualBox = document.getElementById('manualSelectionBox');
+      
+      if (type === 'manual' && source) {
+        manualBox.classList.remove('hidden');
+        renderValuesList(source);
+      } else {
+        manualBox.classList.add('hidden');
+      }
+    }
+
+    function renderValuesList(source) {
+      const container = document.getElementById('valuesListContainer');
+      container.innerHTML = '';
+      const vals = getAllUniqueValues(source);
+      
+      vals.forEach((v, index) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-3 p-2 hover:bg-[#f6f6f7] group draggable-value cursor-move';
+        row.draggable = true;
+        row.innerHTML = `
+          <i class="fas fa-grip-vertical text-[#babec3] text-[10px]"></i>
+          <input type="checkbox" checked class="w-4 h-4 rounded border-[#d1d1d1] text-[#2c6ecb]">
+          <span class="text-[13px]">${v}</span>
+        `;
+        container.appendChild(row);
+      });
+      initValueDnD();
+    }
+
+    function saveNewOption() {
+      const source = document.getElementById('sourceSelect').value;
+      const label = document.getElementById('labelInput').value;
+      const type = document.getElementById('valueTypeSelect').value;
+      
+      if (!source || !label) {
+        showToast("Please select a source and provide a label", "error");
+        return;
+      }
+
+      let finalValues = [];
+      if (type === 'all') {
+        finalValues = getAllUniqueValues(source);
+      } else {
+        const rows = document.querySelectorAll('#valuesListContainer div');
+        rows.forEach(r => {
+          if (r.querySelector('input').checked) {
+            finalValues.push(r.querySelector('span').innerText);
+          }
+        });
+      }
+
+      if (editingOptionId) {
+        const opt = configuredOptions.find(o => o.id === editingOptionId);
+        opt.label = label;
+        opt.source = source;
+        opt.type = type;
+        opt.values = finalValues;
+        showToast(`Option "${label}" updated`);
+      } else {
+        const newOpt = {
+          id: Date.now(),
+          label,
+          source,
+          type,
+          values: finalValues
+        };
+        configuredOptions.push(newOpt);
+        showToast(`Option "${label}" created`);
+      }
+
+      renderOptionsTable();
+      updatePreview(true);
+      hideAddView();
+    }
+
+    function renderOptionsTable() {
+      const tableBody = document.getElementById('ymmTableBody');
+      const bottomBtn = document.getElementById('bottomAddBtn');
+      
+      if (configuredOptions.length === 0) {
+        tableBody.innerHTML = `
+          <tr class="empty-row">
+            <td colspan="4" class="px-4 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <div class="w-12 h-12 bg-[#f6f6f7] rounded-full flex items-center justify-center mb-3">
+                  <i class="fas fa-layer-group text-[#babec3] text-lg"></i>
+                </div>
+                <p class="text-[14px] font-medium text-[#303030]">No search options yet</p>
+                <p class="text-[12px] text-[#6d7175] mt-1 max-w-[280px]">Start building your automotive search engine by adding your first field.</p>
+                <button onclick="showAddView()" class="mt-4 bg-[#008060] text-white text-[12px] font-medium px-4 py-2 rounded hover:bg-[#006e52]">Create your first option</button>
+              </div>
+            </td>
+          </tr>
+        `;
+        bottomBtn.classList.add('hidden');
+      } else {
+        tableBody.innerHTML = '';
+        configuredOptions.forEach(opt => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-[#fbfbfb] group cursor-move draggable-row';
+          row.draggable = true;
+          row.dataset.id = opt.id;
+          row.innerHTML = `
+            <td class="px-4 py-3 text-[#babec3]"><i class="fas fa-grip-vertical"></i></td>
+            <td class="px-2 py-3 font-semibold text-[#303030]">${opt.label}</td>
+            <td class="px-4 py-3 text-[#6d7175] font-mono text-[11px] truncate max-w-[200px]">${opt.source}</td>
+            <td class="px-4 py-3 text-right space-x-2">
+              <button onclick="showAddView(${opt.id})" class="w-8 h-8 rounded hover:bg-[#f1f1f1] text-[#5c5f62]"><i class="fas fa-edit text-xs"></i></button>
+              <button onclick="removeOption(${opt.id})" class="w-8 h-8 rounded hover:bg-[#fff0f0] text-[#d72c0d]"><i class="fas fa-trash-alt text-xs"></i></button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+          addTableDnD(row);
+        });
+        bottomBtn.classList.remove('hidden');
+      }
+    }
+
+    function removeOption(id) {
+      const opt = configuredOptions.find(o => o.id === id);
+      configuredOptions = configuredOptions.filter(o => o.id !== id);
+      renderOptionsTable();
+      updatePreview(true);
+      showToast(`Option "${opt.label}" removed`);
+    }
+
+    let previewSelections = {}; // Stores selected values for cascade: { index: value }
+
+    function getAvailableOptions(levelIndex) {
+      if (levelIndex === 0) {
+        return getAllUniqueValues(configuredOptions[0].source);
+      }
+
+      let filtered = mockProducts;
+      for (let i = 0; i < levelIndex; i++) {
+        const prevSource = configuredOptions[i].source;
+        const prevValue = previewSelections[i];
+        filtered = filtered.filter(p => getSourceValue(p, prevSource).includes(prevValue));
+      }
+
+      const currentSource = configuredOptions[levelIndex].source;
+      const options = new Set();
+      filtered.forEach(p => {
+        getSourceValue(p, currentSource).forEach(v => options.add(v));
+      });
+      return Array.from(options).sort();
+    }
+
+    function handlePreviewSelect(index, value) {
+      // Clear all selections below this index
+      Object.keys(previewSelections).forEach(key => {
+        if (parseInt(key) >= index) delete previewSelections[key];
+      });
+
+      if (value) {
+        previewSelections[index] = value;
+      }
+      
+      renderPreviewFields();
+    }
+
+    function renderPreviewFields() {
+      const container = document.getElementById('previewEnabled');
+      container.innerHTML = '';
+
+      if (configuredOptions.length === 0) {
+        container.innerHTML = '<div class="text-center py-10 text-[#8c9196] text-[12px] italic">No fields configured</div>';
+        return;
+      }
+
+      configuredOptions.forEach((opt, index) => {
+        const isEnabled = index === 0 || (previewSelections[index - 1] !== undefined);
+        const options = isEnabled ? getAvailableOptions(index) : [];
+        const selectedValue = previewSelections[index] || "";
+        
+        let helpText = "";
+        if (!isEnabled && index > 0) {
+          helpText = `<p class="text-[10px] text-[#8c9196] mt-1">Select ${configuredOptions[index-1].label} first</p>`;
+        }
+
+        const fieldHtml = `
+          <div class="mb-4">
+            <label class="block text-[12px] font-medium text-[#5c5f62] mb-1.5">${opt.label}</label>
+            <div class="relative">
+              <select 
+                onchange="handlePreviewSelect(${index}, this.value)"
+                ${!isEnabled ? 'disabled' : ''}
+                class="w-full bg-white border ${isEnabled ? 'border-[#d1d1d1]' : 'border-[#e2e2e5] bg-[#f9f9f9]'} rounded px-3 py-2 text-[13px] appearance-none text-[#303030] focus:ring-1 focus:ring-[#2c6ecb] outline-none cursor-pointer disabled:cursor-not-allowed">
+                <option value="">-- Select ${opt.label} --</option>
+                ${options.map(v => `<option value="${v}" ${v === selectedValue ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <i class="fas fa-chevron-down text-[10px] text-[#8c9196]"></i>
+              </div>
+            </div>
+            ${helpText}
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', fieldHtml);
+      });
+      
+      const allSelected = configuredOptions.length > 0 && Object.keys(previewSelections).length === configuredOptions.length;
+
+      container.insertAdjacentHTML('beforeend', `
+        <button 
+          onclick="handleSearchClick()"
+          class="w-full mt-2 ${allSelected ? 'bg-[#b60000] hover:bg-[#a00000]' : 'bg-[#e2e2e5] cursor-not-allowed'} text-white text-[13px] font-medium py-2 rounded shadow-sm transition-colors">
+          Search
+        </button>
+      `);
+    }
+
+    function handleSearchClick() {
+      const selections = Object.values(previewSelections).join(' | ');
+      if (selections) {
+        showToast(`Filter applied: ${selections}`);
+        console.log("YMM Search:", previewSelections);
+      } else {
+        showToast("Please complete all selections", "error");
+      }
+    }
+
+    function updatePreview(skipToast = false) {
+      const isEnabled = document.getElementById('enableToggle').checked;
+      const disabledView = document.getElementById('previewDisabled');
+      const enabledView = document.getElementById('previewEnabled');
+      
+      // Reset selections when structure changes or toggled
+      previewSelections = {};
+
+      if (isEnabled) {
+        disabledView.classList.add('hidden');
+        enabledView.classList.remove('hidden');
+        renderPreviewFields();
+      } else {
+        disabledView.classList.remove('hidden');
+        enabledView.classList.add('hidden');
+      }
+    }
+
+    // --- DnD Implementation ---
+    function initValueDnD() {
+      const draggables = document.querySelectorAll('.draggable-value');
+      draggables.forEach(d => {
+        d.addEventListener('dragstart', () => d.classList.add('dragging'));
+        d.addEventListener('dragend', () => d.classList.remove('dragging'));
+      });
+      const container = document.getElementById('valuesListContainer');
+      container.addEventListener('dragover', e => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(container, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        if (afterElement == null) container.appendChild(dragging);
+        else container.insertBefore(dragging, afterElement);
+      });
+    }
+
+    function addTableDnD(row) {
+      row.addEventListener('dragstart', () => { row.classList.add('dragging'); });
+      row.addEventListener('dragend', () => { 
+        row.classList.remove('dragging');
+        reorderConfiguredOptions();
+      });
+      const body = document.getElementById('ymmTableBody');
+      body.addEventListener('dragover', e => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(body, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        if (dragging && dragging.classList.contains('draggable-row')) {
+           if (afterElement == null) body.appendChild(dragging);
+           else body.insertBefore(dragging, afterElement);
+        }
+      });
+    }
+
+    function reorderConfiguredOptions() {
+      const rows = document.querySelectorAll('#ymmTableBody .draggable-row');
+      const newOrder = [];
+      rows.forEach(row => {
+        const id = parseInt(row.dataset.id);
+        const opt = configuredOptions.find(o => o.id === id);
+        if (opt) newOrder.push({...opt});
+      });
+      configuredOptions = newOrder;
+      previewSelections = {}; 
+      renderOptionsTable();
+      updatePreview(true);
+      showToast("Order updated");
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging), .draggable-value:not(.dragging)')];
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+        else return closest;
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // --- Initialization ---
+    renderOptionsTable();
+    updatePreview(true);
+    // (Existing Page Selector Logic remains same as previous but kept clean)
+    const availablePages = [{id:'hp',name:'Home Page'},{id:'sr',name:'Search Result Page'},{id:'ac',name:'All Collections'}];
+    let selectedPageIds = [];
+    const pageTrigger = document.getElementById('pageSelectorTrigger');
+    const pageDropdown = document.getElementById('pageDropdown');
+    const pageOptionsList = document.getElementById('pageOptionsList');
+    const selectedTagsContainer = document.getElementById('selectedTags');
+    const placeholderText = document.getElementById('placeholderText');
+
+    function togglePageDropdown() { pageDropdown.classList.toggle('hidden'); }
+    pageTrigger.addEventListener('click', (e) => { if(!e.target.closest('.remove-tag')) togglePageDropdown(); });
+    function renderPageOptions() {
+      pageOptionsList.innerHTML = '';
+      availablePages.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 px-3 py-2 hover:bg-[#f6f6f7] cursor-pointer text-[13px] rounded';
+        div.innerHTML = `<input type="checkbox" ${selectedPageIds.includes(p.id)?'checked':''} class="w-4 h-4 rounded text-[#2c6ecb]"><span>${p.name}</span>`;
+        div.onclick = () => { selectedPageIds.includes(p.id) ? selectedPageIds = selectedPageIds.filter(id=>id!==p.id) : selectedPageIds.push(p.id); renderSelectedTags(); renderPageOptions(); };
+        pageOptionsList.appendChild(div);
+      });
+    }
+    function renderSelectedTags() {
+      selectedTagsContainer.innerHTML = '';
+      if(selectedPageIds.length===0) placeholderText.classList.remove('hidden');
+      else {
+        placeholderText.classList.add('hidden');
+        selectedPageIds.forEach(id => {
+          const p = availablePages.find(x=>x.id===id);
+          const tag = document.createElement('div');
+          tag.className = 'bg-[#e2e2e5] text-[#303030] text-[11px] px-2 py-0.5 rounded flex items-center gap-1.5';
+          tag.innerHTML = `${p.name} <i class="fas fa-times cursor-pointer remove-tag" onclick="selectedPageIds=selectedPageIds.filter(x=>x!=='${id}');renderSelectedTags();renderPageOptions();"></i>`;
+          selectedTagsContainer.appendChild(tag);
+        });
+      }
+    }
+    renderPageOptions();
+  </script>
+</body>
+</html>
+    </main>
+  </div>
+
+  <button class="fixed bottom-5 right-5 w-11 h-11 rounded-full bg-[#b60000] text-white flex items-center justify-center shadow-lg">
+    <span class="text-[12px] font-bold">F</span>
+  </button>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2"></div>
+
+  <script>
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-[#303030]' : 'bg-[#d72c0d]';
+      toast.className = `${bgColor} text-white text-[13px] px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 animate-bounce-short`;
+      toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+        ${message}
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
+    }
+
+    function toggleNotification() {
+      const content = document.getElementById('notiContent');
+      const chevron = document.getElementById('notiChevron');
+      content.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    }
+
+    function handleToggleChange() {
+      const isEnabled = document.getElementById('enableToggle').checked;
+      showToast(isEnabled ? "Year Make Model enabled" : "Year Make Model disabled");
+      updatePreview(true);
+    }
+
+    function updatePreview(skipToast = false) {
+      const isEnabled = document.getElementById('enableToggle').checked;
+      const disabledView = document.getElementById('previewDisabled');
+      const enabledView = document.getElementById('previewEnabled');
+      
+      if (isEnabled) {
+        disabledView.classList.add('hidden');
+        enabledView.classList.remove('hidden');
+        renderPreviewFields();
+      } else {
+        disabledView.classList.remove('hidden');
+        enabledView.classList.add('hidden');
+      }
+      checkEmptyState();
+    }
+
+    function checkEmptyState() {
+      const tableBody = document.getElementById('ymmTableBody');
+      const rows = tableBody.querySelectorAll('tr:not(.empty-row)');
+      const bottomAddBtn = document.getElementById('bottomAddBtn');
+      
+      if (rows.length === 0) {
+        tableBody.innerHTML = `
+          <tr class="empty-row">
+            <td colspan="4" class="px-4 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <div class="w-12 h-12 bg-[#f6f6f7] rounded-full flex items-center justify-center mb-3">
+                  <i class="fas fa-layer-group text-[#babec3] text-lg"></i>
+                </div>
+                <p class="text-[14px] font-medium text-[#303030]">No search options yet</p>
+                <p class="text-[12px] text-[#6d7175] mt-1 max-w-[280px]">Start building your automotive search engine by adding your first Year, Make, or Model field.</p>
+                <button onclick="addRow()" class="mt-4 bg-[#008060] text-white text-[12px] font-medium px-4 py-2 rounded hover:bg-[#006e52] transition-colors">
+                  Create your first option
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        bottomAddBtn.classList.add('hidden');
+      } else {
+        bottomAddBtn.classList.remove('hidden');
+      }
+    }
+
+    function addRow() {
+      const tableBody = document.getElementById('ymmTableBody');
+      const emptyRow = tableBody.querySelector('.empty-row');
+      if (emptyRow) emptyRow.remove();
+
+      const newRow = document.createElement('tr');
+      newRow.className = 'hover:bg-[#fbfbfb] group cursor-move draggable-row';
+      newRow.draggable = true;
+      newRow.innerHTML = `
+        <td class="px-4 py-3 text-[#babec3]"><i class="fas fa-grip-vertical"></i></td>
+        <td class="px-2 py-3 font-semibold text-[#303030]">New Option</td>
+        <td class="px-4 py-3 text-[#6d7175] font-mono text-[12px]">product:metafield:custom:new_attribute</td>
+        <td class="px-4 py-3 text-right space-x-2">
+          <button class="relative group/tooltip inline-flex items-center justify-center w-8 h-8 rounded hover:bg-[#f1f1f1] text-[#5c5f62]">
+            <i class="fas fa-edit text-xs"></i>
+            <span class="absolute bottom-full mb-2 hidden group-hover/tooltip:block bg-[#303030] text-white text-[10px] px-2 py-1 rounded">Edit</span>
+          </button>
+          <button onclick="removeRow(this)" class="relative group/tooltip inline-flex items-center justify-center w-8 h-8 rounded hover:bg-[#fff0f0] text-[#d72c0d]">
+            <i class="fas fa-trash-alt text-xs"></i>
+            <span class="absolute bottom-full mb-2 hidden group-hover/tooltip:block bg-[#303030] text-white text-[10px] px-2 py-1 rounded">Remove</span>
+          </button>
+        </td>
+      `;
+      tableBody.appendChild(newRow);
+      addDnDHandlers(newRow);
+      updatePreview(true);
+      showToast("Option added successfully");
+    }
+
+    function removeRow(btn) {
+      btn.closest('tr').remove();
+      updatePreview(true);
+      showToast("Option removed successfully");
+    }
+
+    function renderPreviewFields() {
+      const tableRows = document.querySelectorAll('#ymmTableBody tr:not(.empty-row)');
+      const container = document.getElementById('previewEnabled');
+      container.innerHTML = '';
+
+      if (tableRows.length === 0) {
+        container.innerHTML = '<div class="text-center py-10 text-[#8c9196] text-[12px] italic">Add options to see preview</div>';
+        return;
+      }
+
+      tableRows.forEach(row => {
+        const label = row.querySelector('td:nth-child(2)').innerText;
+        const fieldHtml = `
+          <div>
+            <label class="block text-[12px] font-medium text-[#5c5f62] mb-1.5">${label}</label>
+            <div class="relative">
+              <select class="w-full bg-white border border-[#d1d1d1] rounded px-3 py-2 text-[13px] appearance-none text-[#303030] focus:ring-1 focus:ring-[#2c6ecb] outline-none cursor-pointer">
+                <option value="">--Select--</option>
+                <option>Option 1</option>
+                <option>Option 2</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <i class="fas fa-chevron-down text-[10px] text-[#8c9196]"></i>
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', fieldHtml);
+      });
+      
+      container.insertAdjacentHTML('beforeend', `
+        <button class="w-full mt-2 bg-[#b60000] text-white text-[13px] font-medium py-2 rounded shadow-sm hover:bg-[#a00000] transition-colors">
+          Search
+        </button>
+      `);
+    }
+
+    // Apply to Page Logic
+    const availablePages = [
+      { id: 'hp', name: 'Home Page', category: 'General' },
+      { id: 'sr', name: 'Search Result Page', category: 'General' },
+      { id: 'ac', name: 'All Collections', category: 'General' },
+      { id: 'c1', name: 'Summer Collection', category: 'Collections' },
+      { id: 'c2', name: 'Winter Parts', category: 'Collections' },
+      { id: 'c3', name: 'Brake Systems', category: 'Collections' },
+      { id: 'c4', name: 'Engine Components', category: 'Collections' },
+      { id: 'c5', name: 'Suspension & Steering', category: 'Collections' },
+      { id: 'c6', name: 'Exhaust Systems', category: 'Collections' }
+    ];
+
+    let selectedPageIds = [];
+
+    const pageTrigger = document.getElementById('pageSelectorTrigger');
+    const pageDropdown = document.getElementById('pageDropdown');
+    const pageOptionsList = document.getElementById('pageOptionsList');
+    const selectedTagsContainer = document.getElementById('selectedTags');
+    const placeholderText = document.getElementById('placeholderText');
+    const pageSearch = document.getElementById('pageSearch');
+
+    function togglePageDropdown() {
+      pageDropdown.classList.toggle('hidden');
+    }
+
+    pageTrigger.addEventListener('click', (e) => {
+      if (e.target.closest('.remove-tag')) return;
+      togglePageDropdown();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!pageTrigger.contains(e.target) && !pageDropdown.contains(e.target)) {
+        pageDropdown.classList.add('hidden');
+      }
+    });
+
+    function renderPageOptions(filter = '') {
+      pageOptionsList.innerHTML = '';
+      const filtered = availablePages.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+      
+      filtered.forEach(page => {
+        const isChecked = selectedPageIds.includes(page.id);
+        const item = document.createElement('div');
+        item.className = 'flex items-center gap-2 px-3 py-2 hover:bg-[#f6f6f7] cursor-pointer text-[13px] rounded';
+        item.innerHTML = `
+          <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded border-[#d1d1d1] text-[#2c6ecb] focus:ring-[#2c6ecb]">
+          <span>${page.name}</span>
+        `;
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cb = item.querySelector('input');
+          if (e.target !== cb) cb.checked = !cb.checked;
+          togglePageSelection(page.id);
+        });
+        pageOptionsList.appendChild(item);
+      });
+    }
+
+    function togglePageSelection(id) {
+      if (selectedPageIds.includes(id)) {
+        selectedPageIds = selectedPageIds.filter(pid => pid !== id);
+      } else {
+        selectedPageIds.push(id);
+      }
+      renderSelectedTags();
+      renderPageOptions(pageSearch.value);
+    }
+
+    function renderSelectedTags() {
+      selectedTagsContainer.innerHTML = '';
+      if (selectedPageIds.length === 0) {
+        placeholderText.classList.remove('hidden');
+      } else {
+        placeholderText.classList.add('hidden');
+        selectedPageIds.forEach(id => {
+          const page = availablePages.find(p => p.id === id);
+          const tag = document.createElement('div');
+          tag.className = 'bg-[#e2e2e5] text-[#303030] text-[12px] px-2 py-0.5 rounded flex items-center gap-1.5';
+          tag.innerHTML = `
+            ${page.name}
+            <i class="fas fa-times cursor-pointer hover:text-[#d72c0d] remove-tag" onclick="togglePageSelection('${id}')"></i>
+          `;
+          selectedTagsContainer.appendChild(tag);
+        });
+      }
+    }
+
+    pageSearch.addEventListener('input', (e) => renderPageOptions(e.target.value));
+    renderPageOptions();
+
+    const tableBody = document.getElementById('ymmTableBody');
+    let dragSrcEl = null;
+
+    function handleDragStart(e) {
+      dragSrcEl = this;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', this.innerHTML);
+      this.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+      if (e.preventDefault) {
+        e.preventDefault();
+      }
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+
+    function handleDragEnter(e) {
+      this.classList.add('bg-[#f0f0f0]');
+    }
+
+    function handleDragLeave(e) {
+      this.classList.remove('bg-[#f0f0f0]');
+    }
+
+    function handleDrop(e) {
+      if (e.stopPropagation) {
+        e.stopPropagation();
+      }
+      if (dragSrcEl !== this) {
+        dragSrcEl.innerHTML = this.innerHTML;
+        this.innerHTML = e.dataTransfer.getData('text/html');
+        updatePreview(true);
+        showToast("Display order updated");
+      }
+      return false;
+    }
+
+    function handleDragEnd(e) {
+      [].forEach.call(rows, function (row) {
+        row.classList.remove('dragging');
+        row.classList.remove('bg-[#f0f0f0]');
+      });
+    }
+
+    let rows = document.querySelectorAll('.draggable-row');
+    function addDnDHandlers(row) {
+      row.addEventListener('dragstart', handleDragStart, false);
+      row.addEventListener('dragenter', handleDragEnter, false);
+      row.addEventListener('dragover', handleDragOver, false);
+      row.addEventListener('dragleave', handleDragLeave, false);
+      row.addEventListener('drop', handleDrop, false);
+      row.addEventListener('dragend', handleDragEnd, false);
+    }
+    rows.forEach(addDnDHandlers);
+
+    // Dropdown script
+    const trigger = document.getElementById('dropdownTrigger');
+    const menu = document.getElementById('dropdownMenu');
+    // ... rest of your existing scripts if needed
+  </script>
+</body>
+</html>
